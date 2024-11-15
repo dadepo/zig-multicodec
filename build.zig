@@ -18,7 +18,6 @@ pub fn build(b: *std.Build) void {
     const opts = .{ .target = target, .optimize = optimize };
     const muvarint_module = b.dependency("muvarint", opts).module("muvarint");
 
-
     const lib = b.addStaticLibrary(.{
         .name = "zig_multicodec",
         // In this case the main source file is merely a path, however, in more
