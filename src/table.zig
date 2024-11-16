@@ -2,7 +2,7 @@
 
 const std = @import("std");
 pub const Status = enum { Permanent, Draft, Deprecated };
-const Multicodec = struct {
+pub const Multicodec = struct {
     name: []const u8,
     tag: []const u8,
     code: u32,
@@ -1186,7 +1186,7 @@ pub const MultiCodeName = enum {
     scion,
 };
 
-pub const MultiCodeCode = enum(MultiCodeName) {
+pub const MultiCodeCode = enum(u32) {
     identity = 0x00,
     cidv1 = 0x01,
     cidv2 = 0x02,
