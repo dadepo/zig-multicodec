@@ -27,6 +27,11 @@ pub fn getCodec(data: []u8) !?table.Multicodec {
     return codec;
 }
 
+pub fn getData(data: []u8) ![]const u8 {
+    const decoded = try muvarint.decode(data[0..]);
+    return decoded.rest;
+}
+
 test "addNamePrefix" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
     const value = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
@@ -40,4 +45,12 @@ test "getCodec" {
     defer std.testing.allocator.free(prefixed);
     const codec = try getCodec(prefixed);
     try std.testing.expectEqual(codec.?.code, @intFromEnum(table.MultiCodeCode.raw));
+}
+
+test "getData" {
+    var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
+    const prefixed = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
+    defer std.testing.allocator.free(prefixed);
+    const data = try getData(prefixed);
+    try std.testing.expect(std.mem.eql(u8, data, &[5]u8{ 104, 101, 108, 108, 111 }));
 }
