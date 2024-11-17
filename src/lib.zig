@@ -2,8 +2,12 @@ const std = @import("std");
 const table = @import("table.zig");
 const muvarint = @import("muvarint");
 
+pub fn getCodecByName(name: table.MultiCodeName) !table.Multicodec {
+    return table.multicodecTable.get(@tagName(name)) orelse return error.InvalidCodecName;
+}
+
 pub fn addNamePrefix(allocator: std.mem.Allocator, name: table.MultiCodeName, data: []u8) ![]u8 {
-    const multicodec = table.multicodecTable.get(@tagName(name)) orelse return error.InvalidCodecName;
+    const multicodec = try getCodecByName(name);
     if (multicodec.status != table.Status.Permanent) {
         return error.CodecNotPermanent;
     }
@@ -46,6 +50,17 @@ pub fn split(data: []u8) !?struct { codec: table.Multicodec, data: []const u8 } 
     };
 
     return .{ .codec = codec.?, .data = decoded.rest };
+}
+
+test "getCodecByName" {
+    {
+        const codec = try getCodecByName(table.MultiCodeName.raw);
+        try std.testing.expect(std.mem.eql(u8, codec.name, "raw"));
+    }
+    {
+        const codec = try getCodecByName(table.MultiCodeName.lamport_sha3_512_priv_share);
+        try std.testing.expect(std.mem.eql(u8, codec.name, "lamport-sha3-512-priv-share"));
+    }
 }
 
 test "addNamePrefix" {
