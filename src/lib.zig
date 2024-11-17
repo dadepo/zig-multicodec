@@ -7,9 +7,9 @@ pub fn addNamePrefix(allocator: std.mem.Allocator, name: table.MultiCodeName, da
     if (multicodec.status != table.Status.Permanent) {
         return error.CodecNotPermanent;
     }
-    const varint = try muvarint.encodeHexAlloc(allocator, multicodec.code);
-    defer allocator.free(varint);
-    return try std.mem.concat(allocator, u8, &[_][]const u8{ varint, data });
+    var varint = try std.BoundedArray(u8, 128).init(muvarint.varintSize(multicodec.code));
+    try muvarint.bufferEncode(multicodec.code, varint.slice());
+    return try std.mem.concat(allocator, u8, &[_][]const u8{ varint.slice(), data });
 }
 
 pub fn getCodec(data: []u8) !?table.Multicodec {

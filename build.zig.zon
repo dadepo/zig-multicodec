@@ -24,8 +24,8 @@
     // internet connectivity.
     .dependencies = .{
         .muvarint = .{
-            .url = "git+https://github.com/dadepo/muvarint#0b349de2e171a38b8bab9a2c85812cd01c506e2d",
-            .hash = "12205a14506cffc64c98de76f59995a40aacffce534ac758c671b487f61b855cda92",
+            .url = "git+https://github.com/dadepo/muvarint#cbf56ef8a59afef41c772bcecb5bde280561bc3c",
+            .hash = "1220d0fabbe5321e8acb691b1047fc845d82a2ef787fe91f4bdb1dd7ef1b6ad84387",
         },
     },
     .paths = .{
