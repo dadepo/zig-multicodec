@@ -32,6 +32,22 @@ pub fn getData(data: []u8) ![]const u8 {
     return decoded.rest;
 }
 
+pub fn split(data: []u8) !?struct { codec: table.Multicodec, data: []const u8 } {
+    const decoded = try muvarint.decode(data[0..]);
+    const codecs = table.multicodecTable.values();
+    // improve with a look up.
+    const codec: ?table.Multicodec = blk: {
+        for (codecs) |codec| {
+            if (codec.code == decoded.code) {
+                break :blk codec;
+            }
+        }
+        return null;
+    };
+
+    return .{ .codec = codec.?, .data = decoded.rest };
+}
+
 test "addNamePrefix" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
     const value = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
@@ -53,4 +69,14 @@ test "getData" {
     defer std.testing.allocator.free(prefixed);
     const data = try getData(prefixed);
     try std.testing.expect(std.mem.eql(u8, data, &[5]u8{ 104, 101, 108, 108, 111 }));
+}
+
+test "split" {
+    var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
+    const prefixed = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
+    defer std.testing.allocator.free(prefixed);
+    const codec_and_data = try split(prefixed);
+    try std.testing.expect(std.mem.eql(u8, prefixed, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
+    try std.testing.expectEqual(codec_and_data.?.codec.code, @intFromEnum(table.MultiCodeCode.raw));
+    try std.testing.expect(std.mem.eql(u8, codec_and_data.?.data, &[5]u8{ 104, 101, 108, 108, 111 }));
 }
