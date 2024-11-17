@@ -80,40 +80,9 @@ pub fn main() !void {
         try output_file.writeAll("});\n\n");
     }
 
-    // MultiCodeName
+    // Codecs
     try output_file.writeAll(
-        \\pub const MultiCodeName = enum {
-        \\
-    );
-
-    lines.reset();
-    {
-        // Skip the header
-        _ = lines.next();
-
-        while (lines.next()) |line| {
-            var fields = std.mem.tokenize(u8, line, ",");
-
-            const name = std.mem.trim(u8, fields.next() orelse break, " ");
-
-            const name_replaced = try allocator.dupe(u8, name);
-            std.mem.replaceScalar(u8, name_replaced, '-', '_');
-
-            const string = try std.fmt.allocPrint(
-                allocator,
-                "{s},\n",
-                .{name_replaced},
-            );
-            defer allocator.free(string);
-
-            try output_file.writeAll(string);
-        }
-        try output_file.writeAll("};\n\n");
-    }
-
-    // MultiCodeCode
-    try output_file.writeAll(
-        \\pub const MultiCodeCode = enum(u32) {
+        \\pub const Codec = enum(u32) {
         \\
     );
 

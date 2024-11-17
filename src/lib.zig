@@ -2,7 +2,7 @@ const std = @import("std");
 const table = @import("table.zig");
 const muvarint = @import("muvarint");
 
-pub fn getCodecByName(name: table.MultiCodeName) !table.Multicodec {
+pub fn getCodecByName(name: table.Codec) !table.Multicodec {
     return table.multicodecTable.get(@tagName(name)) orelse return error.InvalidCodecName;
 }
 
@@ -20,7 +20,7 @@ pub fn getCodecByCode(code: anytype) !table.Multicodec {
     return codec;
 }
 
-pub fn addNamePrefix(allocator: std.mem.Allocator, name: table.MultiCodeName, data: []u8) ![]u8 {
+pub fn addNamePrefix(allocator: std.mem.Allocator, name: table.Codec, data: []u8) ![]u8 {
     const multicodec = try getCodecByName(name);
     if (multicodec.status != table.Status.Permanent) {
         return error.CodecNotPermanent;
@@ -50,44 +50,44 @@ pub fn split(data: []u8) !struct { codec: table.Multicodec, data: []const u8 } {
 
 test "getCodecByName" {
     {
-        const codec = try getCodecByName(table.MultiCodeName.raw);
+        const codec = try getCodecByName(table.Codec.raw);
         try std.testing.expect(std.mem.eql(u8, codec.name, "raw"));
     }
     {
-        const codec = try getCodecByName(table.MultiCodeName.lamport_sha3_512_priv_share);
+        const codec = try getCodecByName(table.Codec.lamport_sha3_512_priv_share);
         try std.testing.expect(std.mem.eql(u8, codec.name, "lamport-sha3-512-priv-share"));
     }
 }
 
 test "getCodecByCode" {
     {
-        const codec = try getCodecByCode(@intFromEnum(table.MultiCodeCode.raw));
+        const codec = try getCodecByCode(@intFromEnum(table.Codec.raw));
         try std.testing.expect(std.mem.eql(u8, codec.name, "raw"));
     }
     {
-        const codec = try getCodecByCode(@intFromEnum(table.MultiCodeCode.lamport_sha3_512_priv_share));
+        const codec = try getCodecByCode(@intFromEnum(table.Codec.lamport_sha3_512_priv_share));
         try std.testing.expect(std.mem.eql(u8, codec.name, "lamport-sha3-512-priv-share"));
     }
 }
 
 test "addNamePrefix" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const value = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
+    const value = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(value);
     try std.testing.expect(std.mem.eql(u8, value, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
 }
 
 test "getCodec" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const prefixed = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
+    const prefixed = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const codec = try getCodec(prefixed);
-    try std.testing.expectEqual(codec.code, @intFromEnum(table.MultiCodeCode.raw));
+    try std.testing.expectEqual(codec.code, @intFromEnum(table.Codec.raw));
 }
 
 test "getData" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const prefixed = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
+    const prefixed = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const data = try getData(prefixed);
     try std.testing.expect(std.mem.eql(u8, data, &[5]u8{ 104, 101, 108, 108, 111 }));
@@ -95,10 +95,10 @@ test "getData" {
 
 test "split" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const prefixed = try addNamePrefix(std.testing.allocator, table.MultiCodeName.raw, input[0..]);
+    const prefixed = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const codec_and_data = try split(prefixed);
     try std.testing.expect(std.mem.eql(u8, prefixed, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
-    try std.testing.expectEqual(codec_and_data.codec.code, @intFromEnum(table.MultiCodeCode.raw));
+    try std.testing.expectEqual(codec_and_data.codec.code, @intFromEnum(table.Codec.raw));
     try std.testing.expect(std.mem.eql(u8, codec_and_data.data, &[5]u8{ 104, 101, 108, 108, 111 }));
 }
