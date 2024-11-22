@@ -20,7 +20,8 @@ pub fn getCodecByCode(code: anytype) !table.Multicodec {
     return codec;
 }
 
-pub fn addNamePrefix(allocator: std.mem.Allocator, name: table.Codec, data: []u8) ![]u8 {
+/// Tag the given data with a codec using the codec name.
+pub fn tagName(allocator: std.mem.Allocator, name: table.Codec, data: []u8) ![]u8 {
     const multicodec = try getCodecByName(name);
     if (multicodec.status != table.Status.Permanent) {
         return error.CodecNotPermanent;
@@ -72,14 +73,14 @@ test "getCodecByCode" {
 
 test "addNamePrefix" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const value = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
+    const value = try tagName(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(value);
     try std.testing.expect(std.mem.eql(u8, value, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
 }
 
 test "getCodec" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const prefixed = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
+    const prefixed = try tagName(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const codec = try getCodec(prefixed);
     try std.testing.expectEqual(codec.code, @intFromEnum(table.Codec.raw));
@@ -87,7 +88,7 @@ test "getCodec" {
 
 test "getData" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const prefixed = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
+    const prefixed = try tagName(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const data = try getData(prefixed);
     try std.testing.expect(std.mem.eql(u8, data, &[5]u8{ 104, 101, 108, 108, 111 }));
@@ -95,7 +96,7 @@ test "getData" {
 
 test "split" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const prefixed = try addNamePrefix(std.testing.allocator, table.Codec.raw, input[0..]);
+    const prefixed = try tagName(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const codec_and_data = try split(prefixed);
     try std.testing.expect(std.mem.eql(u8, prefixed, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
