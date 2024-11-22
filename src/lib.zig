@@ -20,6 +20,10 @@ pub fn getCodecByCode(code: anytype) !table.Multicodec {
     return codec;
 }
 
+pub fn getCode(code: table.Codec) u32 {
+    return @intFromEnum(code);
+}
+
 /// Tag the given data with a codec using the codec name.
 pub fn tagName(allocator: std.mem.Allocator, name: table.Codec, data: []u8) ![]u8 {
     const multicodec = try getCodecByName(name);
@@ -70,11 +74,11 @@ test "getCodecByName" {
 
 test "getCodecByCode" {
     {
-        const codec = try getCodecByCode(@intFromEnum(table.Codec.raw));
+        const codec = try getCodecByCode(getCode(table.Codec.raw));
         try std.testing.expect(std.mem.eql(u8, codec.name, "raw"));
     }
     {
-        const codec = try getCodecByCode(@intFromEnum(table.Codec.lamport_sha3_512_priv_share));
+        const codec = try getCodecByCode(getCode(table.Codec.lamport_sha3_512_priv_share));
         try std.testing.expect(std.mem.eql(u8, codec.name, "lamport-sha3-512-priv-share"));
     }
 }
@@ -88,7 +92,7 @@ test "tagName" {
 
 test "tagCode" {
     var input: [5]u8 = [_]u8{ 104, 101, 108, 108, 111 };
-    const value = try tagCode(std.testing.allocator, @intFromEnum(table.Codec.raw), input[0..]);
+    const value = try tagCode(std.testing.allocator, getCode(table.Codec.raw), input[0..]);
     defer std.testing.allocator.free(value);
     try std.testing.expect(std.mem.eql(u8, value, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
 }
@@ -98,7 +102,7 @@ test "getCodec" {
     const prefixed = try tagName(std.testing.allocator, table.Codec.raw, input[0..]);
     defer std.testing.allocator.free(prefixed);
     const codec = try getCodec(prefixed);
-    try std.testing.expectEqual(codec.code, @intFromEnum(table.Codec.raw));
+    try std.testing.expectEqual(codec.code, getCode(table.Codec.raw));
 }
 
 test "getData" {
@@ -115,6 +119,6 @@ test "split" {
     defer std.testing.allocator.free(prefixed);
     const codec_and_data = try split(prefixed);
     try std.testing.expect(std.mem.eql(u8, prefixed, &[6]u8{ 85, 104, 101, 108, 108, 111 }));
-    try std.testing.expectEqual(codec_and_data.codec.code, @intFromEnum(table.Codec.raw));
+    try std.testing.expectEqual(codec_and_data.codec.code, getCode(table.Codec.raw));
     try std.testing.expect(std.mem.eql(u8, codec_and_data.data, &[5]u8{ 104, 101, 108, 108, 111 }));
 }
